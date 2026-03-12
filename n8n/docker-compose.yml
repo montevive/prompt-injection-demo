@@ -1,0 +1,14 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    network_mode: host
+    environment:
+      N8N_PORT: "5680"
+      N8N_PROTOCOL: "http"
+      N8N_HOST: "0.0.0.0"
+      N8N_TASK_BROKER_PORT: "5681"
+    volumes:
+      - n8n_injection_data:/home/node/.n8n
+
+volumes:
+  n8n_injection_data:

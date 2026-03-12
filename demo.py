@@ -327,6 +327,7 @@ DEFAULT_MODELS = [
     {"backend": "ollama",    "id": "llama3.2:3b"},
     {"backend": "ollama",    "id": "qwen2.5:14b"},
     {"backend": "ollama",    "id": "phi4:latest"},
+    {"backend": "ollama",    "id": "mistral:v0.3"},
 ]
 
 

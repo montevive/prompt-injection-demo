@@ -20,7 +20,10 @@
       "Bash(docker inspect:*)",
       "Bash(docker volume:*)",
       "Bash(sudo sqlite3:*)",
-      "Bash(chmod +x /home/chema/projects/montevive/research/prompt-injection/run-n8n-demo.sh)"
+      "Bash(chmod +x /home/chema/projects/montevive/research/prompt-injection/run-n8n-demo.sh)",
+      "Bash(python3 -c \"exec\\(open\\(''''/home/chema/projects/montevive/research/prompt-injection/demo-server.py''''\\).read\\(\\)\\)\")",
+      "Bash(python3 -c \"import py_compile; py_compile.compile\\(''demo-server.py'', doraise=True\\)\")",
+      "Bash(python3 demo-server.py)"
     ]
   }
 }

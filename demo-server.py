@@ -10,10 +10,13 @@ Usage:
 """
 
 import argparse
+import glob
 import json
 import os
 import signal
+import string
 import threading
+import urllib.parse
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -84,7 +87,105 @@ class PoisonedHandler(BaseHTTPRequestHandler):
         pass
 
 
+VIEW_TEMPLATE = string.Template("""<!DOCTYPE html>
+<html>
+<head>
+<title>Collected Exfiltrations</title>
+<style>
+  body { font-family: monospace; background: #1a1a2e; color: #e0e0e0; margin: 2em; }
+  h1 { color: #e94560; }
+  .empty { color: #888; font-style: italic; }
+  .card { background: #16213e; border: 1px solid #e94560; border-radius: 8px; padding: 1em; margin: 1em 0; }
+  .card h3 { color: #e94560; margin-top: 0; }
+  .meta { color: #888; font-size: 0.9em; margin-bottom: 0.5em; }
+  pre { background: #0f3460; padding: 1em; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+  a { color: #e94560; }
+</style>
+</head>
+<body>
+<h1>Collected Exfiltrations</h1>
+$content
+</body>
+</html>
+""")
+
+DETAIL_TEMPLATE = string.Template("""<!DOCTYPE html>
+<html>
+<head>
+<title>Exfiltration Detail</title>
+<style>
+  body { font-family: monospace; background: #1a1a2e; color: #e0e0e0; margin: 2em; }
+  h1 { color: #e94560; }
+  a { color: #e94560; }
+  pre { background: #0f3460; padding: 1em; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+  .label { color: #888; }
+</style>
+</head>
+<body>
+<a href="/view">&larr; Back</a>
+<h1>$filename</h1>
+<pre>$json_content</pre>
+</body>
+</html>
+""")
+
+
 class CollectorHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == "/view":
+            query = urllib.parse.parse_qs(parsed.query)
+            file_param = query.get("file", [None])[0]
+
+            if file_param:
+                safe_name = os.path.basename(file_param)
+                filepath = os.path.join(COLLECT_DIR, safe_name)
+                if os.path.isfile(filepath):
+                    with open(filepath) as f:
+                        raw = json.dumps(json.load(f), indent=2, ensure_ascii=False)
+                    import html as html_mod
+                    html = DETAIL_TEMPLATE.substitute(
+                        filename=html_mod.escape(safe_name),
+                        json_content=html_mod.escape(raw),
+                    )
+                else:
+                    html = DETAIL_TEMPLATE.substitute(filename="Not found", json_content="File does not exist.")
+            else:
+                files = sorted(glob.glob(os.path.join(COLLECT_DIR, "*.json")), reverse=True)
+                if not files:
+                    content = '<p class="empty">No exfiltrations collected yet.</p>'
+                else:
+                    cards = []
+                    for fp in files:
+                        name = os.path.basename(fp)
+                        try:
+                            with open(fp) as f:
+                                data = json.load(f)
+                            source = data.get("source", "unknown")
+                            ts = data.get("timestamp", "")
+                            body_preview = str(data.get("body", ""))[:300]
+                            import html as html_mod
+                            cards.append(
+                                f'<div class="card">'
+                                f'<h3><a href="/view?file={urllib.parse.quote(name)}">{html_mod.escape(name)}</a></h3>'
+                                f'<div class="meta">Source: {html_mod.escape(source)} | {html_mod.escape(ts)}</div>'
+                                f'<pre>{html_mod.escape(body_preview)}{"..." if len(str(data.get("body", ""))) > 300 else ""}</pre>'
+                                f'</div>'
+                            )
+                        except Exception:
+                            cards.append(f'<div class="card"><h3>{name}</h3><pre>Error reading file</pre></div>')
+                    content = "\n".join(cards)
+                html = VIEW_TEMPLATE.substitute(content=content)
+
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.end_headers()
+            self.wfile.write(html.encode())
+            return
+
+        self.send_response(404)
+        self.end_headers()
+
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(length).decode()
@@ -139,6 +240,7 @@ def main():
     print(f"Servers running (payload={args.payload}):")
     print(f"  Poisoned page : http://0.0.0.0:{POISONED_PORT}/")
     print(f"  Collector     : http://0.0.0.0:{COLLECTOR_PORT}/collect")
+    print(f"  Viewer        : http://0.0.0.0:{COLLECTOR_PORT}/view")
     print(f"\nWaiting for connections... (Ctrl+C to stop)\n")
 
     signal.pause()

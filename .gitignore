@@ -1,3 +1,4 @@
 .env
 __pycache__/
 collected/
+.claude/settings.json

@@ -2,6 +2,8 @@
 
 Research project demonstrating how indirect prompt injection can exploit AI agents with tool-calling capabilities to exfiltrate sensitive data (system prompts, conversation history, API keys).
 
+[![Demo Video](https://img.youtube.com/vi/XBAiwo-pawg/maxresdefault.jpg)](https://www.youtube.com/watch?v=XBAiwo-pawg)
+
 ## Attack flow
 
 1. User asks an AI agent to summarize a webpage

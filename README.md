@@ -2,7 +2,11 @@
 
 Research project demonstrating how indirect prompt injection can exploit AI agents with tool-calling capabilities to exfiltrate sensitive data (system prompts, conversation history, API keys).
 
-[![Demo Video](https://img.youtube.com/vi/XBAiwo-pawg/maxresdefault.jpg)](https://www.youtube.com/watch?v=XBAiwo-pawg)
+### Demo video
+
+[![Watch the demo video on YouTube](https://img.youtube.com/vi/XBAiwo-pawg/maxresdefault.jpg)](https://www.youtube.com/watch?v=XBAiwo-pawg)
+
+**[Watch on YouTube: Indirect Prompt Injection — Stealing API Keys from AI Agents (Live Demo)](https://www.youtube.com/watch?v=XBAiwo-pawg)** — Full walkthrough showing the attack in action using n8n + Ollama, with automated testing across multiple models and analysis of the results.
 
 ## Attack flow
 
